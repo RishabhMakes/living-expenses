@@ -5,6 +5,7 @@ An interactive single-file HTML calculator that estimates the **minimum gross an
 > **Original idea and numbers** by [@deedydas](https://x.com/deedydas) — see the source tweet:
 > [https://x.com/deedydas/status/2025768860805476412](https://x.com/deedydas/status/2025768860805476412)
 
+Available here live: [https://rishabhmakes.github.io/living-expenses/]
 ---
 
 ## What It Does

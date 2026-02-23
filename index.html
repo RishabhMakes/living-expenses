@@ -494,12 +494,17 @@ const PER_KID = {
   collegeSIP:      [112500,112500,112500,112500,112500],
 };
 
-// International travel tiers — monthly amortised, city-specific (MUM DEL BLR HYD PNE)
+// International travel tiers — monthly amortised base (2 adults, 0 kids), city-specific (MUM DEL BLR HYD PNE)
+// perKidMonthly: additional monthly cost per child (same for all cities — same flights, extra seat/room)
 const INTL_TRAVEL_TIERS = {
-  luxury:  { hint: 'Business/First class · ₹18 L/yr', monthly: [150000, 150000, 150000, 150000, 150000] },
-  highend: { hint: 'Premium economy · ₹13.2 L/yr',   monthly: [110000, 110000, 110000, 110000, 110000] },
-  normal:  { hint: 'Economy · ₹7.2 L/yr',            monthly: [ 60000,  60000,  60000,  60000,  60000] },
+  luxury:  { label: 'Business/First class', monthly: [150000, 150000, 150000, 150000, 150000], perKidMonthly: 20000 },
+  highend: { label: 'Premium economy',      monthly: [110000, 110000, 110000, 110000, 110000], perKidMonthly: 15000 },
+  normal:  { label: 'Economy',              monthly: [ 60000,  60000,  60000,  60000,  60000], perKidMonthly: 10000 },
 };
+
+// Domestic travel — monthly base (2 adults, 0 kids) and per-kid increment (MUM DEL BLR HYD PNE)
+const DOMESTIC_TRAVEL_BASE    = [30000, 25000, 20000, 18000, 18000];
+const DOMESTIC_TRAVEL_PER_KID = [ 3000,  2500,  2000,  2000,  2000];
 
 // ═══════════════════════════════════════════════════
 //  NEIGHBOURHOOD TIERS  (city order: MUM DEL BLR HYD PNE)
@@ -577,13 +582,16 @@ function buildSections(kids, travelTier, collegeDest, tier) {
     ]
   } : null;
 
-  const intlMonthly = [...(INTL_TRAVEL_TIERS[travelTier] ?? INTL_TRAVEL_TIERS.highend).monthly];
+  const intlTier = INTL_TRAVEL_TIERS[travelTier] ?? INTL_TRAVEL_TIERS.highend;
+  const intlMonthly = intlTier.monthly.map(base => base + k * intlTier.perKidMonthly);
+  const domesticMonthly = DOMESTIC_TRAVEL_BASE.map((base, i) => base + k * DOMESTIC_TRAVEL_PER_KID[i]);
 
+  const travelWho = k === 0 ? 'Couple' : `Family of ${k + 2}`;
   const travelSection = {
     label: '✈️ Travel',
     rows: [
-      { label: 'International Trip — Family (÷12)',     vals: intlMonthly },
-      { label: 'Domestic Travel / Weekend Trips',       vals: [30000, 25000, 20000, 18000, 18000] },
+      { label: `International Trip — ${travelWho} (÷12)`, vals: intlMonthly },
+      { label: 'Domestic Travel / Weekend Trips',          vals: domesticMonthly },
     ]
   };
 
@@ -766,6 +774,12 @@ function render() {
 
   append(row('gross-income',  ['🏆 MINIMUM GROSS ANNUAL HOUSEHOLD INCOME', ...gross.map(fmt)]));
   append(row('monthly-gross', ['Monthly Gross Equivalent', ...grossMo.map(fmt)]));
+
+  // Update travel hint to reflect current kids count
+  const travelTierData = INTL_TRAVEL_TIERS[travelTier] ?? INTL_TRAVEL_TIERS.highend;
+  const intlMonthlyHint = travelTierData.monthly[0] + kids * travelTierData.perKidMonthly;
+  const annualLakh = (intlMonthlyHint * 12 / 100000).toFixed(1);
+  document.getElementById('travel-hint').textContent = `${travelTierData.label} · ₹${annualLakh} L/yr`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -787,8 +801,6 @@ document.querySelectorAll('.kid-btn').forEach(btn => {
 // Travel tier
 document.getElementById('travel-tier').addEventListener('change', function() {
   state.travelTier = this.value;
-  const tier = INTL_TRAVEL_TIERS[this.value];
-  if (tier) document.getElementById('travel-hint').textContent = tier.hint;
   render();
 });
 

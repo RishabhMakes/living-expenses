@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimum Household Income: India 5-City Comparison</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f5fb;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+      padding-bottom: 48px;
+    }
+
+    .page-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Page header ── */
+    .page-header { text-align: center; margin-bottom: 20px; }
+    .page-header .flag { font-size: 11px; font-weight: 700; letter-spacing: 4px; color: #dc2626; text-transform: uppercase; margin-bottom: 5px; }
+    .page-header h1 { font-size: clamp(15px, 2.6vw, 21px); font-weight: 800; color: #0f2a4a; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 7px; }
+    .page-header .subtitle { font-size: 11.5px; color: #64748b; }
+    .page-header .subtitle span { color: #1d4ed8; font-weight: 600; margin: 0 4px; }
+    .badges { margin-top: 8px; }
+    .badge { display: inline-block; background: #dbeafe; color: #1e40af; border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 600; margin: 2px; border: 1px solid #bfdbfe; }
+
+    /* ── Control Panel ── */
+    .controls {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 14px 18px 0;
+      box-shadow: 0 8px 32px rgba(15,42,74,0.18), 0 2px 8px rgba(15,42,74,0.10);
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      width: 272px;
+    }
+    .controls-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+    .controls-body {
+      max-height: 380px;
+      overflow-y: auto;
+      padding-bottom: 14px;
+      padding-right: 2px;
+    }
+    .controls-body::-webkit-scrollbar { width: 4px; }
+    .controls-body::-webkit-scrollbar-track { background: transparent; }
+    .controls-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .controls-row {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+    .ctrl-label { font-size: 11.5px; font-weight: 700; color: #334155; }
+    .ctrl-sub { font-size: 10px; color: #94a3b8; margin-top: -3px; }
+    /* Kids buttons */
+    .kid-btns { display: flex; gap: 6px; }
+    .kid-btn {
+      width: 36px; height: 34px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kid-btn:hover { background: #eff6ff; border-color: #93c5fd; }
+    .kid-btn.active { background: #1e40af; border-color: #1e40af; color: #ffffff; }
+
+    .ctrl-divider { width: 100%; height: 1px; background: #e2e8f0; margin: 2px 0; flex-shrink: 0; }
+
+    /* College destination select */
+    .dest-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 7px 28px 7px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      outline: none;
+      width: 100%;
+      min-width: unset;
+      transition: border-color 0.12s;
+    }
+    .dest-select:hover { border-color: #93c5fd; }
+    .dest-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+    .dest-hint { font-size: 10px; color: #6366f1; margin-top: 1px; font-weight: 600; }
+
+    /* ── Slab reference ── */
+    .slab-wrap { margin-top: 16px; text-align: center; }
+    details { display: inline-block; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 11px; color: #1e3a8a; text-align: left; }
+    summary { padding: 6px 14px; cursor: pointer; font-weight: 600; user-select: none; }
+    details[open] { padding-bottom: 10px; }
+    .slab-table { margin: 4px 14px 0; border-collapse: collapse; }
+    .slab-table td, .slab-table th { padding: 3px 14px; border-bottom: 1px solid #bfdbfe; font-size: 11px; }
+    .slab-table th { color: #1e3a8a; font-weight: 700; }
+    .slab-section-title { font-weight: 700; color: #1e3a8a; margin: 6px 14px 2px; font-size: 10.5px; letter-spacing: 0.5px; }
+    .slab-cols { display: inline-flex; gap: 20px; }
+
+    /* ── Scroll wrapper ── */
+    .table-scroll { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 16px rgba(15,42,74,0.10); border: 1px solid #cbd5e1; max-width: 800px; margin: 0 auto; }
+
+    /* ── Main table ── */
+    table { border-collapse: collapse; min-width: 680px; width: 100%; font-size: 12.5px; background: #fff; }
+    col.col-label { width: 220px; }
+    col.col-city  { width: 116px; }
+
+    /* ── Column headers ── */
+    thead tr.city-header th { background: #0f2a4a; color: #fff; font-weight: 700; font-size: 12.5px; padding: 12px 12px 9px; text-align: center; border-bottom: 2px solid #1e3a5f; }
+    thead tr.city-header th:first-child { text-align: left; }
+    thead tr.neighborhood th { background: #1e3a5f; color: #93c5fd; font-size: 9.5px; font-weight: 500; padding: 5px 12px 9px; text-align: center; border-bottom: 3px solid #2563eb; }
+    thead tr.neighborhood th:first-child { text-align: left; color: #7ab3d4; font-style: italic; }
+
+    /* ── Section headers ── */
+    tr.section-header td { background: #dbeafe; color: #1e3a8a; font-weight: 700; font-size: 10.5px; letter-spacing: 0.9px; text-transform: uppercase; padding: 8px 12px; border-top: 2px solid #bfdbfe; border-bottom: 1px solid #bfdbfe; }
+
+    /* ── Data rows ── */
+    tr.data-row td { padding: 6px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+    tr.data-row:hover td { background: #eff6ff !important; }
+    tr.data-row td:first-child { color: #334155; font-size: 12px; }
+    tr.data-row td:not(:first-child) { text-align: right; color: #1e293b; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 12px; }
+    tr.data-row:nth-child(even) td { background: #f8fafc; }
+    tr.data-row:nth-child(odd)  td { background: #fff; }
+
+    /* ── Sub-total rows ── */
+    tr.subtotal td { background: #e0eefe !important; color: #1e40af; font-weight: 600; font-size: 11.5px; padding: 7px 12px; border-top: 1px solid #bfdbfe; border-bottom: 2px solid #bfdbfe; }
+    tr.subtotal td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Monthly total ── */
+    tr.monthly-total td { background: #1e40af !important; color: #fff; font-weight: 800; font-size: 13px; padding: 11px 12px; border-top: 3px solid #1d4ed8; }
+    tr.monthly-total td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Annual total ── */
+    tr.annual-total td { background: #1e3a8a !important; color: #bfdbfe; font-weight: 800; font-size: 13px; padding: 11px 12px; border-bottom: 3px solid #1e40af; }
+    tr.annual-total td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Post-tax ── */
+    tr.post-tax td { background: #064e3b !important; color: #6ee7b7; font-weight: 800; font-size: 13px; padding: 11px 12px; border-bottom: 3px solid #059669; }
+    tr.post-tax td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Tax section ── */
+    tr.tax-header td { background: #4c1d95; color: #ddd6fe; font-weight: 700; font-size: 10.5px; letter-spacing: 0.9px; text-transform: uppercase; padding: 8px 12px; border-top: 3px solid #6d28d9; border-bottom: 1px solid #5b21b6; }
+    tr.tax-row td { background: #f5f3ff !important; padding: 6px 12px; border-bottom: 1px solid #e9d5ff; color: #4c1d95; font-size: 12px; }
+    tr.tax-row td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.tax-row:nth-child(even) td { background: #ede9fe !important; }
+    tr.tax-rate td { background: #6d28d9 !important; color: #ede9fe; font-weight: 700; padding: 8px 12px; border-top: 2px solid #5b21b6; border-bottom: 2px solid #5b21b6; font-size: 12px; }
+    tr.tax-rate td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── FINAL GROSS ── */
+    tr.gross-income td { background: #0f2a4a !important; color: #93c5fd; font-weight: 900; font-size: 15px; padding: 13px 12px; border-top: 4px solid #2563eb; border-bottom: 3px solid #2563eb; }
+    tr.gross-income td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Monthly gross ── */
+    tr.monthly-gross td { background: #1e3a5f !important; color: #bfdbfe; font-weight: 700; font-size: 12.5px; padding: 8px 12px; border-bottom: 4px solid #1d4ed8; }
+    tr.monthly-gross td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Spacer ── */
+    tr.spacer td { height: 7px; background: #e2e8f0; border: none; }
+
+    /* ── Footer ── */
+    .footer { margin-top: 16px; text-align: center; font-size: 10px; color: #94a3b8; letter-spacing: 0.3px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div class="flag">🇮🇳 India</div>
+    <h1>Minimum Household Income: India 5-City Comparison</h1>
+    <div class="subtitle">
+      <span id="subtitle-family">Family of 4</span>·<span>Best Private Schools (IB/IGCSE)</span>·<span>4BR Home Owned</span>·<span id="subtitle-college">College in 🇺🇸 USA</span>
+    </div>
+    <div class="badges">
+      <span class="badge">All figures in ₹ INR</span>
+      <span class="badge">Monthly unless noted</span>
+      <span class="badge">FY 2024–25</span>
+      <span class="badge">New Tax Regime</span>
+    </div>
+  </div>
+
+  <!-- ── Control Panel ── -->
+  <div class="controls">
+    <div class="controls-title">⚙️ Scenario Controls</div>
+    <div class="controls-body">
+    <div class="controls-row">
+
+      <!-- Neighbourhood Tier -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">Neighbourhood Tier</div>
+        <div class="ctrl-sub">Updates names &amp; cost basis</div>
+        <select class="dest-select" id="neighbour-tier">
+          <option value="premium">🏙️ Premium</option>
+          <option value="mid">🏘️ Mid-neighbourhood</option>
+          <option value="normal">🏡 Normal</option>
+        </select>
+        <div class="dest-hint" id="neighbour-hint">Worli · DLF · Indiranagar · Jubilee Hills · Koregaon Pk</div>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <!-- Kids -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">Number of Kids</div>
+        <div class="ctrl-sub">Scales education &amp; college SIP</div>
+        <div class="kid-btns">
+          <button class="kid-btn" data-kids="0">0</button>
+          <button class="kid-btn" data-kids="1">1</button>
+          <button class="kid-btn active" data-kids="2">2</button>
+          <button class="kid-btn" data-kids="3">3</button>
+          <button class="kid-btn" data-kids="4">4</button>
+        </div>
+      </div>
+
+      <!-- College Destination -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">College Destination</div>
+        <div class="ctrl-sub">Drives monthly SIP per child</div>
+        <select class="dest-select" id="college-dest">
+          <option value="usa">🇺🇸 USA</option>
+          <option value="uk">🇬🇧 UK</option>
+          <option value="canada">🇨🇦 Canada</option>
+          <option value="australia">🇦🇺 Australia</option>
+          <option value="singapore">🇸🇬 Singapore</option>
+          <option value="india">🇮🇳 India (Top Tier)</option>
+        </select>
+        <div class="dest-hint" id="dest-hint">USD 80K/yr · 4 yrs · ~₹2.79 Cr/child</div>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <!-- International Travel -->
+      <div class="ctrl-group">
+        <div class="ctrl-label">International Travel</div>
+        <div class="ctrl-sub">Annual budget · city-specific</div>
+        <select class="dest-select" id="travel-tier">
+          <option value="luxury">✈️ Luxury</option>
+          <option value="highend" selected>🌍 High-end</option>
+          <option value="normal">🧳 Normal</option>
+        </select>
+        <div class="dest-hint" id="travel-hint">Premium economy · ₹13.2 L/yr</div>
+      </div>
+
+    </div>
+    </div><!-- .controls-body -->
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="table-scroll">
+    <table>
+      <colgroup>
+        <col class="col-label" />
+        <col class="col-city" /><col class="col-city" /><col class="col-city" />
+        <col class="col-city" /><col class="col-city" />
+      </colgroup>
+      <thead>
+        <tr class="city-header">
+          <th>Expense Category</th>
+          <th>Mumbai</th><th>Delhi NCR</th><th>Bengaluru</th><th>Hyderabad</th><th>Pune</th>
+        </tr>
+        <tr class="neighborhood">
+          <th>Neighbourhood</th>
+          <th>Worli / BKC / Bandra W</th>
+          <th>DLF / Vasant Vihar</th>
+          <th>Indiranagar / Whitefield</th>
+          <th>Jubilee Hills / Banjara Hills</th>
+          <th>Koregaon Pk / Kalyani Nagar</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Slab Reference ── -->
+  <div class="slab-wrap">
+    <details>
+      <summary>📊 New Tax Regime Slabs &amp; Surcharge Brackets</summary>
+      <div class="slab-cols">
+        <div>
+          <div class="slab-section-title">INCOME TAX SLABS</div>
+          <table class="slab-table">
+            <tr><th>Income Range</th><th>Rate</th></tr>
+            <tr><td>Up to ₹3 L</td><td>Nil</td></tr>
+            <tr><td>₹3 L – ₹7 L</td><td>5%</td></tr>
+            <tr><td>₹7 L – ₹10 L</td><td>10%</td></tr>
+            <tr><td>₹10 L – ₹12 L</td><td>15%</td></tr>
+            <tr><td>₹12 L – ₹15 L</td><td>20%</td></tr>
+            <tr><td>Above ₹15 L</td><td>30%</td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="slab-section-title">SURCHARGE (on tax liability)</div>
+          <table class="slab-table">
+            <tr><th>Gross Income</th><th>Surcharge</th></tr>
+            <tr><td>Up to ₹50 L</td><td>Nil</td></tr>
+            <tr><td>₹50 L – ₹1 Cr</td><td>10%</td></tr>
+            <tr><td>₹1 Cr – ₹2 Cr</td><td>15%</td></tr>
+            <tr><td>₹2 Cr – ₹5 Cr</td><td>25%</td></tr>
+            <tr><td>Above ₹5 Cr</td><td>25% (capped)</td></tr>
+          </table>
+          <div class="slab-section-title" style="margin-top:6px">CESS</div>
+          <table class="slab-table">
+            <tr><td>Health &amp; Edu Cess</td><td>4% on Tax+Surcharge</td></tr>
+          </table>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="footer">
+    Tax: New Tax Regime progressive slabs (FY 2024-25) with income-based surcharge &amp; 4% H&amp;E Cess. Gross solved via binary search.<br>
+    Home loan EMI: ~90% LTV on premium 4BHK. College SIP: 10-yr monthly SIP @ 12% CAGR to fund full degree cost (all-in, incl. living). Exchange rates: Feb 2025. All values are estimates.
+  </div>
+
+</div><!-- .page-wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const state = { kids: 2, travelTier: 'highend', collegeDest: 'usa', neighbourTier: 'premium' };
+
+// ═══════════════════════════════════════════════════
+//  COLLEGE DESTINATION DATA
+//  SIP per kid per month @ 12% CAGR, 10-yr horizon
+//  Factor: FV of ₹1/mo × 120 months @ 1% = ~230
+//  SIP = total_cost_INR / 230
+// ═══════════════════════════════════════════════════
+const COLLEGE_DESTINATIONS = {
+  usa:       { flag: '🇺🇸', name: 'USA',              sip: 121000, basis: 'USD 80K/yr · 4 yrs · ~₹2.79 Cr/child' },
+  uk:        { flag: '🇬🇧', name: 'UK',               sip:  56000, basis: 'GBP 37.5K/yr · 3 yrs · ~₹1.29 Cr/child' },
+  canada:    { flag: '🇨🇦', name: 'Canada',           sip:  81000, basis: 'CAD 75K/yr · 4 yrs · ~₹1.87 Cr/child' },
+  australia: { flag: '🇦🇺', name: 'Australia',        sip:  59000, basis: 'AUD 80K/yr · 3 yrs · ~₹1.35 Cr/child' },
+  singapore: { flag: '🇸🇬', name: 'Singapore',        sip:  45000, basis: 'SGD 38.8K/yr · 4 yrs · ~₹1.03 Cr/child' },
+  india:     { flag: '🇮🇳', name: 'India (Top Tier)', sip:  22000, basis: '₹12.5 L/yr · 4 yrs · ~₹50 L/child' },
+};
+
+// ═══════════════════════════════════════════════════
+//  STATIC SECTION DATA (city index: 0=MUM 1=DEL 2=BLR 3=HYD 4=PNE)
+//  vals = premium. midVals = mid-neighbourhood. normalVals = normal.
+//  Rows without a tier key fall back to vals (premium).
+// ═══════════════════════════════════════════════════
+const STATIC_SECTIONS = [
+  {
+    label: '🏠 Home Ownership',
+    rows: [
+      { label: 'Home Loan EMI (4BHK)',
+        vals:       [833110, 485981, 277703, 242991, 208278],
+        midVals:    [430000, 273000, 171000, 156000, 129000],
+        normalVals: [175000, 140000, 100000,  85000,  75000] },
+      { label: 'Property Tax (monthly)',
+        vals:       [ 15000,   8000,   6000,   5000,   4000],
+        midVals:    [ 10000,   5000,   4000,   3500,   3000],
+        normalVals: [  7000,   3500,   3000,   2500,   2000] },
+      { label: 'Society Maintenance + Parking',
+        vals:       [ 18000,  12000,  10000,   8000,   8000],
+        midVals:    [ 12000,   9000,   7000,   6000,   6000],
+        normalVals: [  8000,   6000,   5000,   4500,   4500] },
+      { label: 'Home Insurance + Repairs',
+        vals:       [  3000,   2000,   1500,   1200,   1200],
+        midVals:    [  2000,   1500,   1200,   1000,   1000],
+        normalVals: [  1500,   1200,   1000,    800,    800] },
+      { label: 'Utilities (Elec, Water, Gas, Internet)',
+        vals:       [ 16200,  10800,   9000,   7200,   7200],
+        midVals:    [ 13000,   9000,   7500,   6000,   6000],
+        normalVals: [ 10000,   7500,   6000,   5000,   5000] },
+    ]
+  },
+  {
+    label: '🚗 Transportation',
+    rows: [
+      { label: 'Car EMI (Premium SUV / Sedan)',
+        vals:    [65000,  55000,  50000,  45000,  45000] },                // same across tiers
+      { label: 'Driver',
+        vals:       [22000,  18000,  16000,  15000,  14000],
+        midVals:    [20000,  16000,  14000,  13000,  12000],
+        normalVals: [17000,  14000,  12000,  11000,  10000] },
+      { label: 'Fuel + Tolls',
+        vals:       [15000,  12000,  10000,  10000,   9000],
+        midVals:    [12000,  10000,   9000,   8000,   8000],
+        normalVals: [10000,   8000,   7500,   7000,   7000] },
+      { label: 'Car Insurance + Maintenance',
+        vals:    [ 8000,   6000,   5000,   5000,   5000] },                // same across tiers
+    ]
+  },
+  {
+    label: '🧹 Domestic Help',
+    rows: [
+      { label: 'Cook',
+        vals:       [18000,  15000,  14000,  12000,  12000],
+        midVals:    [15000,  12000,  12000,  10000,  10000],
+        normalVals: [12000,  10000,  10000,   8000,   8000] },
+      { label: 'Maid / Housekeeper',
+        vals:       [15000,  12000,  10000,   9700,   9000],
+        midVals:    [12000,  10000,   8000,   7500,   7000],
+        normalVals: [10000,   8000,   7000,   6000,   6000] },
+      { label: 'Part-time Nanny / Extra Help',
+        vals:       [10000,   8000,   7000,   6000,   5000],
+        midVals:    [ 8000,   7000,   5000,   5000,   4000],
+        normalVals: [ 6000,   5500,   4000,   4000,   3500] },
+    ]
+  },
+  {
+    label: '🍽️ Food & Dining',
+    rows: [
+      { label: 'Groceries (Quality)',
+        vals:       [30000,  25000,  22000,  20000,  18000],
+        midVals:    [26000,  22000,  19000,  17000,  15000],
+        normalVals: [22000,  18000,  16000,  14000,  12000] },
+      { label: 'Dining Out / Delivery',
+        vals:       [35000,  30000,  25000,  22000,  20000],
+        midVals:    [28000,  24000,  20000,  18000,  16000],
+        normalVals: [22000,  18000,  16000,  14000,  12000] },
+    ]
+  },
+  {
+    label: '❤️ Health & Wellness',
+    rows: [
+      { label: 'Health Insurance (Family)',
+        vals:    [ 8000,   7000,   6000,   6000,   5000] },                // same across tiers
+      { label: 'Out-of-pocket Medical',
+        vals:    [ 5000,   4000,   4000,   3000,   3000] },                // same across tiers
+      { label: 'Gym / Fitness',
+        vals:       [ 8000,   6000,   5000,   4000,   4000],
+        midVals:    [ 6000,   5000,   4000,   3500,   3000],
+        normalVals: [ 5000,   4000,   3500,   3000,   2500] },
+    ]
+  },
+  {
+    label: '✨ Lifestyle',
+    rows: [
+      { label: 'Clothing & Shopping',
+        vals:       [20000,  15000,  12000,  10000,  10000],
+        midVals:    [15000,  12000,  10000,   8000,   8000],
+        normalVals: [12000,  10000,   8000,   6000,   6000] },
+      { label: 'Entertainment / OTT / Events',
+        vals:       [10000,   8000,   7000,   6000,   5000],
+        midVals:    [ 8000,   7000,   6000,   5000,   4000],
+        normalVals: [ 6000,   5500,   5000,   4000,   3500] },
+      { label: 'Club Membership (amortised monthly)',
+        vals:       [15000,  10000,   8000,   6000,   5000],
+        midVals:    [10000,   7000,   5000,   4000,   3500],
+        normalVals: [ 6000,   4000,   3500,   3000,   2500] },
+    ]
+  },
+  {
+    label: '📦 Miscellaneous',
+    rows: [
+      { label: 'Personal Care & Grooming',
+        vals:       [ 8000,   6000,   5000,   5000,   4000],
+        midVals:    [ 6000,   5000,   4500,   4000,   3500],
+        normalVals: [ 5000,   4000,   4000,   3500,   3000] },
+      { label: 'Gifts, Charity & Social',
+        vals:       [10000,   8000,   6000,   5000,   5000],
+        midVals:    [ 8000,   7000,   5000,   4500,   4000],
+        normalVals: [ 6000,   5000,   4000,   4000,   3500] },
+      { label: 'Buffer / Contingency',
+        vals:       [15000,  12000,  10000,   8000,   8000],
+        midVals:    [12000,  10000,   8000,   7000,   7000],
+        normalVals: [10000,   8000,   6500,   5500,   5500] },
+    ]
+  },
+];
+
+// Per-KID monthly rates (multiply by numKids to get section totals)
+const PER_KID = {
+  school:          [110000, 85000, 75000, 60000, 55000],
+  tutoring:        [ 15000, 12500, 10000,  9000,  7500],
+  extracurricular: [ 10000,  7500,  6000,  5000,  5000],
+  books:           [  4000,  3500,  3000,  2500,  2500],
+  collegeSIP:      [112500,112500,112500,112500,112500],
+};
+
+// International travel tiers — monthly amortised, city-specific (MUM DEL BLR HYD PNE)
+const INTL_TRAVEL_TIERS = {
+  luxury:  { hint: 'Business/First class · ₹18 L/yr', monthly: [150000, 150000, 150000, 150000, 150000] },
+  highend: { hint: 'Premium economy · ₹13.2 L/yr',   monthly: [110000, 110000, 110000, 110000, 110000] },
+  normal:  { hint: 'Economy · ₹7.2 L/yr',            monthly: [ 60000,  60000,  60000,  60000,  60000] },
+};
+
+// ═══════════════════════════════════════════════════
+//  NEIGHBOURHOOD TIERS  (city order: MUM DEL BLR HYD PNE)
+// ═══════════════════════════════════════════════════
+const NEIGHBOURHOOD_TIERS = {
+  premium: {
+    label: 'Premium',
+    names: [
+      'Worli / BKC / Bandra W',
+      'DLF / Vasant Vihar',
+      'Indiranagar / Whitefield',
+      'Jubilee Hills / Banjara Hills',
+      'Koregaon Pk / Kalyani Nagar',
+    ],
+  },
+  mid: {
+    label: 'Mid-neighbourhood',
+    names: [
+      'Andheri W / Powai',
+      'Noida Sec 50 / Sohna Rd',
+      'Koramangala / HSR Layout',
+      'Madhapur / Gachibowli',
+      'Viman Nagar / Baner',
+    ],
+  },
+  normal: {
+    label: 'Normal',
+    names: [
+      'Goregaon / Kandivali',
+      'Dwarka / Greater Noida',
+      'Marathahalli / Sarjapur Rd',
+      'Kukatpally / KPHB',
+      'Wakad / Hinjewadi',
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════════════
+//  BUILD SECTIONS (dynamic)
+// ═══════════════════════════════════════════════════
+function buildSections(kids, travelTier, collegeDest, tier) {
+  const k = kids;
+  const kidLabel = k === 1 ? '1 Child' : `${k} Children`;
+  const dest = COLLEGE_DESTINATIONS[collegeDest] || COLLEGE_DESTINATIONS.usa;
+  const destSIP = dest.sip;
+
+  // Resolve STATIC_SECTIONS rows to the correct tier's values.
+  // r[tier+'Vals'] (e.g. r.midVals, r.normalVals) takes precedence over r.vals (premium).
+  const resolvedStatics = STATIC_SECTIONS.map(sec => ({
+    label: sec.label,
+    rows: sec.rows.map(r => ({
+      label: r.label,
+      vals: r[tier + 'Vals'] ?? r.vals,
+    })),
+  }));
+
+  const educationSection = k > 0 ? {
+    label: `🎓 Education — ${kidLabel} (IB / IGCSE)`,
+    rows: [
+      { label: `School Fees (${kidLabel})`,             vals: PER_KID.school.map(v => v * k) },
+      { label: 'Tutoring / SAT Prep / Coaching',        vals: PER_KID.tutoring.map(v => v * k) },
+      { label: 'Extracurriculars',                      vals: PER_KID.extracurricular.map(v => v * k) },
+      { label: 'Books, Supplies, Tech',                 vals: PER_KID.books.map(v => v * k) },
+    ]
+  } : null;
+
+  const sipLabel = k > 0
+    ? `Monthly SIP (${k} kid${k !== 1 ? 's' : ''} · ${dest.name} · ${dest.basis})`
+    : `Monthly SIP (no children)`;
+
+  const collegeSIPSection = k > 0 ? {
+    label: `${dest.flag} College Savings SIP — ${dest.name}`,
+    rows: [
+      { label: sipLabel, vals: Array(N_CITIES).fill(destSIP * k) },
+    ]
+  } : null;
+
+  const intlMonthly = [...(INTL_TRAVEL_TIERS[travelTier] ?? INTL_TRAVEL_TIERS.highend).monthly];
+
+  const travelSection = {
+    label: '✈️ Travel',
+    rows: [
+      { label: 'International Trip — Family (÷12)',     vals: intlMonthly },
+      { label: 'Domestic Travel / Weekend Trips',       vals: [30000, 25000, 20000, 18000, 18000] },
+    ]
+  };
+
+  // Order: Home, Education, CollegeSIP, Transport, Domestic, Food, Health, Lifestyle, Travel, Misc
+  return [
+    resolvedStatics[0],  // Home
+    ...(educationSection  ? [educationSection]  : []),
+    ...(collegeSIPSection ? [collegeSIPSection] : []),
+    resolvedStatics[1],  // Transport
+    resolvedStatics[2],  // Domestic
+    resolvedStatics[3],  // Food
+    resolvedStatics[4],  // Health
+    resolvedStatics[5],  // Lifestyle
+    travelSection,
+    resolvedStatics[6],  // Misc
+  ];
+}
+
+// ═══════════════════════════════════════════════════
+//  NUMBER FORMATTING
+// ═══════════════════════════════════════════════════
+function fmt(n) {
+  n = Math.round(n);
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '−' : '';
+  if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(2) + ' Cr';
+  if (abs >= 100000)   return sign + '₹' + (abs / 100000).toFixed(2) + ' L';
+  // Below 1L — Indian comma format
+  return sign + '₹' + abs.toLocaleString('en-IN');
+}
+const pct = n => (n * 100).toFixed(2) + '%';
+
+// ═══════════════════════════════════════════════════
+//  INDIAN INCOME TAX ENGINE (New Regime FY 2024-25)
+// ═══════════════════════════════════════════════════
+function computeBaseTax(income) {
+  const slabs = [
+    { limit: 300000,   rate: 0.00 },
+    { limit: 700000,   rate: 0.05 },
+    { limit: 1000000,  rate: 0.10 },
+    { limit: 1200000,  rate: 0.15 },
+    { limit: 1500000,  rate: 0.20 },
+    { limit: Infinity, rate: 0.30 },
+  ];
+  let tax = 0, prev = 0;
+  for (const s of slabs) {
+    if (income <= prev) break;
+    tax += (Math.min(income, s.limit) - prev) * s.rate;
+    prev = s.limit;
+  }
+  return tax;
+}
+
+function computeTax(income) {
+  const baseTax = computeBaseTax(income);
+
+  let surchargeRate = 0;
+  if      (income > 20000000) surchargeRate = 0.25; // >₹2 Cr (capped at 25% under new regime)
+  else if (income > 10000000) surchargeRate = 0.15; // ₹1–2 Cr
+  else if (income > 5000000)  surchargeRate = 0.10; // ₹50 L–1 Cr
+
+  // Marginal relief at each surcharge jump threshold
+  const thresholds = [
+    { income: 5000000,  lowerSurcharge: 0.00 },
+    { income: 10000000, lowerSurcharge: 0.10 },
+    { income: 20000000, lowerSurcharge: 0.15 },
+  ];
+  let surchargeAmt = baseTax * surchargeRate;
+  for (const t of thresholds) {
+    if (income > t.income) {
+      const taxAtThreshold = computeBaseTax(t.income) * (1 + t.lowerSurcharge) * 1.04;
+      const taxHere = (baseTax + surchargeAmt) * 1.04;
+      if ((income - t.income) - (taxHere - taxAtThreshold) < 0) {
+        surchargeAmt = (taxAtThreshold + (income - t.income)) / 1.04 - baseTax;
+        if (surchargeAmt < 0) surchargeAmt = 0;
+      }
+    }
+  }
+
+  const cess = (baseTax + surchargeAmt) * 0.04;
+  return baseTax + surchargeAmt + cess;
+}
+
+function findGrossForPostTax(postTaxNeeded) {
+  let lo = postTaxNeeded, hi = postTaxNeeded * 2.5;
+  for (let i = 0; i < 256; i++) {
+    const mid = (lo + hi) / 2;
+    if (mid - computeTax(mid) < postTaxNeeded) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function taxBreakdown(gross) {
+  const base = computeBaseTax(gross);
+  let surRate = 0;
+  if      (gross > 20000000) surRate = 0.25;
+  else if (gross > 10000000) surRate = 0.15;
+  else if (gross > 5000000)  surRate = 0.10;
+  const sur  = base * surRate;
+  const cess = (base + sur) * 0.04;
+  return { base, sur, surRate, cess, total: base + sur + cess };
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════
+const LIFE_INS       = 50000;
+const EMERGENCY      = 300000;
+const RETIREMENT_PCT = 0.15;
+const N_CITIES       = 5;
+
+function row(cls, cells) {
+  const tr = document.createElement('tr');
+  tr.className = cls;
+  cells.forEach(c => {
+    const td = document.createElement('td');
+    td.innerHTML = c;
+    tr.appendChild(td);
+  });
+  return tr;
+}
+function spacer() { return row('spacer', Array(N_CITIES + 1).fill('')); }
+
+function render() {
+  const { kids, travelTier, collegeDest, neighbourTier } = state;
+  const sections = buildSections(kids, travelTier, collegeDest, neighbourTier);
+
+  // Monthly totals
+  const monthly = Array(N_CITIES).fill(0);
+  sections.forEach(sec => sec.rows.forEach(r => r.vals.forEach((v, ci) => monthly[ci] += v)));
+
+  const annual      = monthly.map(m => m * 12);
+  const retirement  = annual.map(a => a * RETIREMENT_PCT);
+  const postTax     = annual.map((a, i) => a + retirement[i] + LIFE_INS + EMERGENCY);
+  const gross       = postTax.map(findGrossForPostTax);
+  const grossMo     = gross.map(g => g / 12);
+  const tax         = gross.map(computeTax);
+  const effRate     = gross.map((g, i) => tax[i] / g);
+  const breakdowns  = gross.map(taxBreakdown);
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  const append = tr => tbody.appendChild(tr);
+
+  sections.forEach(sec => {
+    append(row('section-header', [sec.label, ...Array(N_CITIES).fill('')]));
+    sec.rows.forEach(r => {
+      append(row('data-row', [r.label, ...r.vals.map(fmt)]));
+    });
+    const subs = Array(N_CITIES).fill(0).map((_, ci) => sec.rows.reduce((s, r) => s + r.vals[ci], 0));
+    append(row('subtotal', ['Section Total', ...subs.map(fmt)]));
+  });
+
+  append(spacer());
+  append(row('monthly-total', ['💰 TOTAL MONTHLY EXPENSES', ...monthly.map(fmt)]));
+  append(row('annual-total',  ['📅 TOTAL ANNUAL EXPENSES (×12)', ...annual.map(fmt)]));
+  append(spacer());
+
+  append(row('section-header', ['📋 Additional Annual Commitments', ...Array(N_CITIES).fill('')]));
+  append(row('data-row', ['Retirement Savings (15% of annual expenses)', ...retirement.map(fmt)]));
+  append(row('data-row', ['Life Insurance — Term Plan (annual)', ...Array(N_CITIES).fill(fmt(LIFE_INS))]));
+  append(row('data-row', ['Emergency Fund Contribution (annual)', ...Array(N_CITIES).fill(fmt(EMERGENCY))]));
+  append(spacer());
+  append(row('post-tax', ['✅ TOTAL POST-TAX INCOME NEEDED (Annual)', ...postTax.map(fmt)]));
+  append(spacer());
+
+  append(row('tax-header', ['📊 Tax — New Regime FY 2024-25 (Slab-Based)', ...Array(N_CITIES).fill('')]));
+  append(row('tax-row', ['Gross Annual Income (solved)', ...gross.map(fmt)]));
+  append(row('tax-row', ['Base Income Tax (progressive slabs)', ...breakdowns.map(b => fmt(b.base))]));
+  append(row('tax-row', [
+    'Surcharge on Tax',
+    ...breakdowns.map(b => `${fmt(b.sur)} <span style="font-size:10px;color:#7c3aed">(${(b.surRate*100).toFixed(0)}%)</span>`)
+  ]));
+  append(row('tax-row', ['Health & Education Cess (4%)', ...breakdowns.map(b => fmt(b.cess))]));
+  append(row('tax-row', ['Total Tax Liability', ...breakdowns.map(b => fmt(b.total))]));
+  append(row('tax-rate', ['Effective Tax Rate (actual)', ...effRate.map(pct)]));
+  append(spacer());
+
+  append(row('gross-income',  ['🏆 MINIMUM GROSS ANNUAL HOUSEHOLD INCOME', ...gross.map(fmt)]));
+  append(row('monthly-gross', ['Monthly Gross Equivalent', ...grossMo.map(fmt)]));
+}
+
+// ═══════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════
+// Kids buttons
+document.querySelectorAll('.kid-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.kid-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.kids = parseInt(btn.dataset.kids);
+    const k = state.kids;
+    document.getElementById('subtitle-family').textContent =
+      k === 0 ? 'No Children' : k === 1 ? 'Family of 3' : `Family of ${k + 2}`;
+    render();
+  });
+});
+
+// Travel tier
+document.getElementById('travel-tier').addEventListener('change', function() {
+  state.travelTier = this.value;
+  const tier = INTL_TRAVEL_TIERS[this.value];
+  if (tier) document.getElementById('travel-hint').textContent = tier.hint;
+  render();
+});
+
+// ── Neighbourhood row updater
+function updateNeighbourhoodRow(tier) {
+  const tierData = NEIGHBOURHOOD_TIERS[tier];
+  const ths = document.querySelectorAll('tr.neighborhood th');
+  // ths[0] = "Neighbourhood" label cell; ths[1-5] = city cells
+  tierData.names.forEach((name, i) => { ths[i + 1].textContent = name; });
+  // Update hint text (short first-locality names)
+  const short = tierData.names.map(n => n.split(' / ')[0]);
+  document.getElementById('neighbour-hint').textContent = short.join(' · ');
+}
+
+// Neighbourhood tier
+document.getElementById('neighbour-tier').addEventListener('change', function() {
+  state.neighbourTier = this.value;
+  updateNeighbourhoodRow(this.value);
+  render();
+});
+
+// College destination
+document.getElementById('college-dest').addEventListener('change', function() {
+  state.collegeDest = this.value;
+  const dest = COLLEGE_DESTINATIONS[this.value];
+  if (dest) {
+    document.getElementById('dest-hint').textContent = dest.basis;
+    document.getElementById('subtitle-college').textContent = `College in ${dest.flag} ${dest.name}`;
+  }
+  render();
+});
+
+// ── Initial render
+render();
+</script>
+</body>
+</html>

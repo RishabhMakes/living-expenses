@@ -136,6 +136,8 @@
 
     /* ── Section headers ── */
     tr.section-header td { background: #dbeafe; color: #1e3a8a; font-weight: 700; font-size: 10.5px; letter-spacing: 0.9px; text-transform: uppercase; padding: 8px 12px; border-top: 2px solid #bfdbfe; border-bottom: 1px solid #bfdbfe; }
+    tr.section-header.disabled td { opacity: 0.45; }
+    .sec-toggle { accent-color: #2563eb; width: 12px; height: 12px; cursor: pointer; vertical-align: middle; margin-right: 5px; flex-shrink: 0; }
 
     /* ── Data rows ── */
     tr.data-row td { padding: 6px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
@@ -341,7 +343,7 @@
 // ═══════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════
-const state = { kids: 2, travelTier: 'highend', collegeDest: 'usa', neighbourTier: 'premium' };
+const state = { kids: 2, travelTier: 'highend', collegeDest: 'usa', neighbourTier: 'premium', disabledSections: new Set() };
 
 // ═══════════════════════════════════════════════════
 //  COLLEGE DESTINATION DATA
@@ -720,9 +722,10 @@ function render() {
   const { kids, travelTier, collegeDest, neighbourTier } = state;
   const sections = buildSections(kids, travelTier, collegeDest, neighbourTier);
 
-  // Monthly totals
+  // Monthly totals — only sum sections that are not disabled
+  const activeSections = sections.filter(sec => !state.disabledSections.has(sec.label));
   const monthly = Array(N_CITIES).fill(0);
-  sections.forEach(sec => sec.rows.forEach(r => r.vals.forEach((v, ci) => monthly[ci] += v)));
+  activeSections.forEach(sec => sec.rows.forEach(r => r.vals.forEach((v, ci) => monthly[ci] += v)));
 
   const annual      = monthly.map(m => m * 12);
   const retirement  = annual.map(a => a * RETIREMENT_PCT);
@@ -739,12 +742,32 @@ function render() {
   const append = tr => tbody.appendChild(tr);
 
   sections.forEach(sec => {
-    append(row('section-header', [sec.label, ...Array(N_CITIES).fill('')]));
-    sec.rows.forEach(r => {
-      append(row('data-row', [r.label, ...r.vals.map(fmt)]));
+    const enabled = !state.disabledSections.has(sec.label);
+
+    // Build section-header row with a toggle checkbox in the label cell
+    const headerTr = document.createElement('tr');
+    headerTr.className = 'section-header' + (enabled ? '' : ' disabled');
+    const labelTd = document.createElement('td');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'sec-toggle';
+    cb.checked = enabled;
+    cb.addEventListener('change', () => {
+      if (cb.checked) state.disabledSections.delete(sec.label);
+      else state.disabledSections.add(sec.label);
+      render();
     });
-    const subs = Array(N_CITIES).fill(0).map((_, ci) => sec.rows.reduce((s, r) => s + r.vals[ci], 0));
-    append(row('subtotal', ['Section Total', ...subs.map(fmt)]));
+    labelTd.appendChild(cb);
+    labelTd.appendChild(document.createTextNode(' ' + sec.label));
+    headerTr.appendChild(labelTd);
+    for (let i = 0; i < N_CITIES; i++) headerTr.appendChild(document.createElement('td'));
+    append(headerTr);
+
+    if (enabled) {
+      sec.rows.forEach(r => append(row('data-row', [r.label, ...r.vals.map(fmt)])));
+      const subs = Array(N_CITIES).fill(0).map((_, ci) => sec.rows.reduce((s, r) => s + r.vals[ci], 0));
+      append(row('subtotal', ['Section Total', ...subs.map(fmt)]));
+    }
   });
 
   append(spacer());
